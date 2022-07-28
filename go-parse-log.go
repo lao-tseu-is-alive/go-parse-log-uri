@@ -133,21 +133,22 @@ func main() {
 								}
 								// remove all default layers queries
 								for _, layer := range layerList {
-									if layer == "bdcad_projets_msgroup" || layer == "perimetres_lim_com_msgroup" {
-										// do not print default layers we are not interested in what is always there
-									} else {
-										fmt.Printf("%s %s %02d %s %s:%s %s\n",
-											layer,
-											nginxDateTimeFields["year"],
-											monthInNumber,
-											nginxDateTimeFields["day"],
-											nginxDateTimeFields["hour"],
-											nginxDateTimeFields["minute"],
-											nginxCombinedFields["remote_addr"],
-											// nginxCombinedFields["http_referer"],
-											// nginxCombinedFields["http_user_agent"],
-										)
-									}
+									//if layer == "bdcad_projets_msgroup" || layer == "perimetres_lim_com_msgroup" {
+									//	// do not print default layers we are not interested in what is always there
+									//} else {
+									fmt.Printf("%s\t%s\t%02d\t%s\t%s:%s:%s\t%s\t%s\t%s\n",
+										layer,
+										nginxDateTimeFields["year"],
+										monthInNumber,
+										nginxDateTimeFields["day"],
+										nginxDateTimeFields["hour"],
+										nginxDateTimeFields["minute"],
+										nginxDateTimeFields["second"],
+										nginxCombinedFields["remote_addr"],
+										nginxCombinedFields["http_referer"],
+										nginxCombinedFields["http_user_agent"],
+									)
+									//}
 								}
 							}
 						}
