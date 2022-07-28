@@ -18,6 +18,43 @@ const (
 	defaultLogFile = "data/sample.log"
 )
 
+type Month int
+
+const (
+	Jan Month = iota + 1
+	Feb
+	Mar
+	Apr
+	May
+	Jun
+	Jul
+	Sep
+	Oct
+	Nov
+	Dec
+)
+
+var (
+	MonthMap = map[string]Month{
+		"jan": Jan,
+		"feb": Feb,
+		"mar": Mar,
+		"apr": Apr,
+		"may": May,
+		"jun": Jun,
+		"jul": Jul,
+		"sep": Sep,
+		"oct": Oct,
+		"nov": Nov,
+		"dec": Dec,
+	}
+)
+
+func ConvString2Month(strMonth string) (Month, bool) {
+	month, found := MonthMap[strings.ToLower(strMonth)]
+	return month, found
+}
+
 //goland:noinspection RegExpRedundantEscape
 func main() {
 	// NGINX “combined” log format: http://nginx.org/en/docs/http/ngx_http_log_module.html#log_format
@@ -39,16 +76,13 @@ func main() {
 	if err != nil {
 		l.Fatalf("💥💥 ERROR: 'problem opening log at os.Open(*logPath:%s), got error: %v'\n", logPath, err)
 	}
-	defer func(file *os.File) {
-		err := file.Close()
-		if err != nil {
+	defer file.Close()
 
-		}
-	}(file)
 	l.Printf("# INFO: 'about to read log file : %s'\n", logPath)
 	scanner := bufio.NewScanner(file)
 	numLine, lines := 0, 0
 	for scanner.Scan() {
+		// load a line of log
 		line := scanner.Text()
 		numLine++
 		// fmt.Printf("[%8d]\t%s\n", numLine, line)
@@ -66,16 +100,21 @@ func main() {
 				nginxDateTimeFields[name] = matchDate[j]
 			}
 		}
-
-		// let's filter only 200 http status code
+		monthInNumber, success := ConvString2Month(nginxDateTimeFields["month"])
+		if !success {
+			l.Printf("## Warning ConvString2Month does not know how to convert month for %s\n", nginxCombinedFields["time_local"])
+		}
+		// let's keep only 200 http status code for this task
 		if nginxCombinedFields["status"] == "200" {
 			// verb, url, protocol := strings.Split(nginxCombinedFields["request"], " ")
 			requestParts := strings.Split(nginxCombinedFields["request"], " ")
-			// usually res wll be [HTTP_VERB URL PROTOCOL] like : "GET /index.html HTTP/1.1"
+			// usually res will be [HTTP_VERB URL PROTOCOL] like in : "GET /index.html HTTP/1.1"
 			if len(requestParts) > 1 {
+				// let's keep only the GET http verb for this task
 				if requestParts[0] == "GET" {
 					if strings.Contains(requestParts[1], "?") {
 						urlParts := strings.Split(requestParts[1], "?")
+						// let's keep only the WMS queries containing the LAYERS parameter
 						posLayers := strings.Index(urlParts[1], "LAYERS=")
 						if posLayers > 0 {
 							lines++
@@ -97,7 +136,17 @@ func main() {
 									if layer == "bdcad_projets_msgroup" || layer == "perimetres_lim_com_msgroup" {
 										// do not print default layers we are not interested in what is always there
 									} else {
-										fmt.Printf("%s %s %s %s %s:%s %s %s\n", layer, nginxDateTimeFields["day"], nginxDateTimeFields["month"], nginxDateTimeFields["year"], nginxDateTimeFields["hour"], nginxDateTimeFields["minute"], nginxCombinedFields["remote_addr"], nginxCombinedFields["http_referer"])
+										fmt.Printf("%s %s %02d %s %s:%s %s\n",
+											layer,
+											nginxDateTimeFields["year"],
+											monthInNumber,
+											nginxDateTimeFields["day"],
+											nginxDateTimeFields["hour"],
+											nginxDateTimeFields["minute"],
+											nginxCombinedFields["remote_addr"],
+											// nginxCombinedFields["http_referer"],
+											// nginxCombinedFields["http_user_agent"],
+										)
 									}
 								}
 							}
