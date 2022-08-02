@@ -13,7 +13,7 @@ import (
 
 // const defaultLogFile = "data/nginx_ssl_access.log"
 const (
-	VERSION        = "0.1.0"
+	VERSION        = "0.1.1"
 	APP            = "go-parse-log"
 	defaultLogFile = "data/sample.log"
 )
@@ -28,6 +28,7 @@ const (
 	May
 	Jun
 	Jul
+	Aug
 	Sep
 	Oct
 	Nov
@@ -43,6 +44,7 @@ var (
 		"may": May,
 		"jun": Jun,
 		"jul": Jul,
+		"aug": Aug,
 		"sep": Sep,
 		"oct": Oct,
 		"nov": Nov,
