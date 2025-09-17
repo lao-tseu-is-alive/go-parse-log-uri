@@ -13,7 +13,7 @@ import (
 
 // const defaultLogFile = "data/nginx_ssl_access.log"
 const (
-	VERSION        = "0.1.1"
+	VERSION        = "0.1.2"
 	APP            = "go-parse-log"
 	defaultLogFile = "data/sample.log"
 )
@@ -60,7 +60,7 @@ func ConvString2Month(strMonth string) (Month, bool) {
 //goland:noinspection RegExpRedundantEscape
 func main() {
 	// NGINX “combined” log format: http://nginx.org/en/docs/http/ngx_http_log_module.html#log_format
-	var myNginxRegex = regexp.MustCompile(`^(?P<remote_addr>[^ ]+)\s-\s(?P<remote_user>[^ ]+)\s\[(?P<time_local>[^\]]+)\]\s"(?P<request>[^"]*)"\s(?P<status>\d{1,3})\s(?P<body_bytes_send>\d+)\s"(?P<http_referer>[^"]+)"\s"(?P<http_user_agent>[^"]+)"`)
+	var myNginxRegex = regexp.MustCompile(`^(?P<remote_addr>[^ ]+)\s-\s(?P<remote_user>[^ ]+)\s\[(?P<time_local>[^\]]+)\]\s"(?P<request>[^"]*)"\s(?P<status>\d{1,3})\s(?P<body_bytes_send>\d+)\s"(?P<http_referer>[^"]*)"\s"(?P<http_user_agent>[^"]*)"`)
 	var myDateTimeRegex = regexp.MustCompile("^(?P<day>\\d{1,2})\\/(?P<month>\\w{1,3})\\/(?P<year>\\d{2,4}):(?P<hour>\\d{1,2}):(?P<minute>\\d{1,2}):(?P<second>\\d{1,2})")
 	args := os.Args[1:]
 	var logPath string
@@ -87,8 +87,12 @@ func main() {
 		// load a line of log
 		line := scanner.Text()
 		numLine++
-		// fmt.Printf("[%8d]\t%s\n", numLine, line)
+		//fmt.Printf("#[%8d]\t%s\n", numLine, line)
 		match := myNginxRegex.FindStringSubmatch(line)
+		if match == nil {
+			l.Printf("## WARNING: line %8d did not match regex:\t%s\n", numLine, line)
+			continue // Skip to the next line
+		}
 		nginxCombinedFields := make(map[string]string)
 		for i, name := range myNginxRegex.SubexpNames() {
 			if i != 0 && name != "" {
